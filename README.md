@@ -111,7 +111,9 @@ The slider can be styled to adjust the position, size, and color of track as des
 
 ## Demos
 [Simple demo](http://richdebourke.github.io/mouse-touch-range-slider/simple.html) - demo of the plugin with a single slider
+
 [Extended demo](http://richdebourke.github.io/mouse-touch-range-slider/index.html) - demo of the plugin with multiple sliders
+
 [In operation](http://goo.gl/4Huz36) - plugin in use on a website
 
 ## Configuring the plugin

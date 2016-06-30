@@ -24,7 +24,7 @@
     MouseTouchRangeSlider = function (input, options, plugin_count) {
         var config;
 
-        this.VERSION = "2.1.2";
+        this.VERSION = "1.0";
         this.source_input = input;
         this.tabindex = $(input).prop("tabindex");
         this.plugin_count = plugin_count;

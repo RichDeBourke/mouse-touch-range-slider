@@ -13,7 +13,8 @@ Mouse / Touch Range Slider
 * Works in responsive layouts (using the resize event)
 
 ## Dependencies
-* jQuery 2.X - The plugin only supports newer browsers including IE from version 9 - it does not support IE8 or lower
+* jQuery 2.X or 3.X - The plugin only supports newer browsers including IE from version 9 - it does not support IE8 or lower
+    * The plugin does work with the slim build version of jQuery 3.X
 
 ## Usage
 
@@ -32,7 +33,7 @@ Include an input for each range slider (*more about the input below*):
 Add jQuery, the plugin, the JavaScript code to initiate the plugin, and code to do something when the slider is moved in the body section:
 
 ~~~~ javascript
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.0.0/jquery.slim.min.js"></script>
 <script src="jquery.property-drag-drop.plugin.js"></script>
 <script>
     function sliderMoved() {

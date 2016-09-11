@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="no-touch">
 
 <head>
     <meta charset="utf-8">
@@ -10,8 +10,16 @@
 
     <meta name="description" content="Full demo for MT-RangeSlider.">
 
-    <link href="css/slider-demo.css" rel="stylesheet" type="text/css">
+    <script>
+        (function (window, document, navigator) {
+            if (('ontouchstart' in window) || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0)) {
+                document.documentElement.className = document.documentElement.className.replace(/\bno-touch\b/, 'touch');
+            }
+        }(window, document, navigator));
+    </script>
+
     <link href="css/mt-range-slider.css" rel="stylesheet" type="text/css">
+    <link href="css/slider-demo.css" rel="stylesheet" type="text/css">
 
     <!--[if IE 9]>
         <link href="css/slider-demo-IE9.css" rel="stylesheet" type="text/css">

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="no-touch">
 
 <head>
     <meta charset="utf-8">
@@ -8,7 +8,15 @@
 
     <title>Simple Range Slider Demo</title>
 
-    <meta name="description" content="Simple demo for MT-RangeSlider.">
+    <meta name="description" content="Simple demo for MT-RangeSlider">
+
+    <script>
+        (function (window, document, navigator) {
+            if (('ontouchstart' in window) || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0)) {
+                document.documentElement.className = document.documentElement.className.replace(/\bno-touch\b/, 'touch');
+            }
+        }(window, document, navigator));
+    </script>
 
     <style>
         /* page styles */
@@ -75,22 +83,12 @@
             position: relative;
         }
 
+        .touch .ctrl {
+            margin-top: 6px;
+        }
+
         /* MT-RangeSlider styles */
         .rs-hidden-input {
-            /* position: absolute;
-            display: block;
-            top: 0;
-            left: 0;
-            width: 0;
-            height: 0;
-            font-size: 0;
-            line-height: 0;
-            overflow: hidden;
-            outline: none;
-            z-index: 0;
-            background: none;
-            border-style: solid;
-            border-color: transparent; */
             display: none;
         }
 
@@ -104,8 +102,15 @@
             -ms-user-select: none;
             user-select: none;
             z-index: 1;
-            /* Configurable design related properties */
+        }
+
+        /* Configurable design related properties */
+        .no-touch .rs {
             height: 50px;
+        }
+
+        .touch .rs {
+            height: 54px;
         }
 
         .rs-track {
@@ -115,10 +120,23 @@
             z-index: 2;
             outline: none;
             /* Configurable design related properties */
-            height: 16px;
-            top: 17px;
             border: none;
             border-radius: 16px;
+        }
+
+        /* Configurable design related properties */
+        .no-touch .rs-track {
+            height: 16px;
+            top: 17px;
+        }
+
+        .touch .rs-track {
+            height: 48px;
+            top: 1px;
+        }
+
+        .red .rs-track {
+            background-color: #ff0000;
         }
 
         .rs-slider {
@@ -127,9 +145,6 @@
             cursor: default;
             z-index: 3;
             /* Configurable design related properties */
-            top: 9px;
-            width: 30px;
-            height: 30px;
             border: 1px solid #8a8a8a;
             background: #CCDBE6; /* Old browsers */
             background: -moz-linear-gradient(top, #CCDBE6 0%, #637780 100%); /* FF3.6-15 */
@@ -142,12 +157,21 @@
             transition: background 200ms ease;
         }
 
-        .slider-dragging {
-            cursor: pointer;
+        /* Configurable design related properties */
+        .no-touch .rs-slider {
+            top: 9px;
+            width: 30px;
+            height: 30px;
         }
 
-        .red .rs-track {
-            background-color: #ff0000;
+        .touch .rs-slider {
+            top: 1px;
+            width: 46px;
+            height: 46px;
+        }
+
+        .slider-dragging {
+            cursor: pointer;
         }
 
         .rs-slider:hover {

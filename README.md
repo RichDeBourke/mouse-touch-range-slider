@@ -36,7 +36,7 @@ Add jQuery, the plugin, the JavaScript code to initiate the plugin, and code to 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.0.0/jquery.slim.min.js"></script>
 <script src="jquery.property-drag-drop.plugin.js"></script>
 <script>
-    function sliderMoved() {
+    function sliderMoved(sliderDataObject) {
         console.log("Position is: " + sliderDataObject.id);
     }
     
@@ -76,7 +76,7 @@ The plugin builds the slider around an HTML input. The slider is contained withi
 The class on the parent div (.red in this case) can be used for applying styling to the slider.
 
 ##### Styling the slider
-The slider can be styled to adjust the position, size, and color of track as desired.
+The slider can be styled to adjust the position, size, and color of track as desired. *
 
 ~~~~ css
 .rs {
@@ -96,11 +96,11 @@ The slider can be styled to adjust the position, size, and color of track as des
     height: 30px;
 }
 
-.red .rs-track { /* Example of a track background */
+.red .rs-track { /* Example of a solid track background */
     background-color: #ff0000;
 }
 
-.saturation .rs-track {
+.saturation .rs-track { /* Example of a gradient track background */
     background: #000000;
     background: -moz-linear-gradient(left, #fdfdfd 0%, #000000 100%);
     background: -webkit-linear-gradient(left, #fdfdfd 0%,#000000 100%);
@@ -108,9 +108,76 @@ The slider can be styled to adjust the position, size, and color of track as des
 }
 ~~~~
 
-*Note: IE9 does not support gradient, so I use a special CSS file for IE9 that substitutes a background image for the gradients.*
+*Note: IE9 does not support gradients, so, for my application, I use a special CSS file for IE9 that substitutes a background image for the gradients.*
+
+## Mobile friendly styling
+To be considered [mobile friendly](https://developers.google.com/speed/pagespeed/insights/) by Google, touch targets, like the slider handle and the slider track, need to be at least 48 pixels wide by 48 pixels high. While a larger sized slider would work with a mouse, it would be (in my opinion) less attractive, so I use two styles, one for mouse / pointer devices and the other for touch capable devices.
+
+![Desktop and mobile slider example](images/Slider_style.png)
+
+
+##### Detecting touch devices
+I use a version of [mhulse's no-x.js](https://gist.github.com/mhulse/4704893) method to control the touch/no touch styling.
+
+The `html` tag starts with a `no-touch` class:
+
+~~~~ html
+    <html class="no-touch">
+~~~~
+
+The class on the `html` tag is changed from `no-touch` to `touch` by a JavaScript function if the device thinks it supports touch (in the unlikely event of a false-positive, the styling would result in touch styling on a non-touch device, which would still be operational):
+
+~~~~ javascript
+(function (window, document, navigator) {
+    if (('ontouchstart' in window) || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0)) {
+        document.documentElement.className = document.documentElement.className.replace(/\bno-touch\b/, 'touch');
+    }
+}(window, document, navigator));
+~~~~
+
+Apple Safari supports only [`'ontouchstart' in window`](https://developer.apple.com/library/mac/documentation/AppleApplications/Reference/SafariHTMLRef/Articles/Attributes.html). The other major browsers support [`navigator.maxTouchPoints`](https://w3c.github.io/pointerevents/#extensions-to-the-navigator-interface).
+
+##### Mobile CSS changes
+
+~~~~ css
+.no-touch .rs {
+    height: 50px;
+}
+
+.touch .rs {
+    height: 54px;
+}
+
+.rs-track {
+    border: none;
+    border-radius: 16px;
+}
+
+.no-touch .rs-track {
+    height: 16px;
+    top: 23px;
+}
+
+.touch .rs-track {
+    height: 48px;
+    top: 1px;
+}
+
+.no-touch .rs-slider {
+    top: 15px;
+    width: 30px;
+    height: 30px;
+}
+
+.touch .rs-slider {
+    top: 1px;
+    width: 46px;
+    height: 46px;
+}
+~~~~
 
 ## Demos
+
 [Simple demo](http://richdebourke.github.io/mouse-touch-range-slider/simple.html) - demo of the plugin with a single slider
 
 [Extended demo](http://richdebourke.github.io/mouse-touch-range-slider/index.html) - demo of the plugin with multiple sliders
@@ -125,15 +192,16 @@ The plugin uses the following parameters when it is initialized:
 * **max** - Slider maximum value - integer - default value is 100
 * **initialValue** - Slider starting value - integer - default value is 0
 * **keyboard** - Lets the user adjust the value using the arrow keys - Boolean - default is true
-* **onStart** - Optional - callback function that's called after the slider is initiated.
-    * All callbacks are provided with a sliderDataObject that contains:
+* **onCreate** - Optional - callback function that's called after a slider is initiated.
+* **onStart** - Optional - callback function that's called when a slider  handle is touched (by the mouse or by touch).
+* **onChange** - Optional - callback function that's called when a slider has changed its position (by the mouse or by touch).
+* **onFinish** - Optional - callback function that's called after a slider finishes moving (after the mouseup or touchend event)
+  * All callback functions are provided with a sliderDataObject that contains:
         * **input** - the original input object
         * **id** - id for the original input object
         * **min** - slider's minimum value
         * **max** - slider's maximum value
         * **value** - slider's current value
-* **onChange** - Optional - callback function that's called when the slider has changed its position (by the mouse or by touch).
-* **onFinish** - Optional - callback function that's called after the slider finishes moving (after the mouseup or touchend event)
 
 ## Positioning the slider
 The slider can be positioned programmatically by creating a handle to the slider:
@@ -158,6 +226,28 @@ The plugin creates the track and slider and attaches them to the original input'
 Dragging a slider will change the range slider's value. Using the arrow keys (when a slider has focus) will move the slider one position. Clicking or tapping the track will also move the slider one position.
 
 A listener for resize is attached to the window that will re-evaluate the slider settings if the window is resized.
+
+## Revisions
+#### 1.1.1 - 2016/08/30
+#### Added CSS for touch devices
+Added CSS styling for touch devices and updated the two demos to support both touch and non-touch displays. 
+
+#### 1.1 - 2016/08/25
+#### Revised the callback functions
+Version 1.0 used three callback functions:
+* onStart - Called when a slider was created
+* onChange - Called when a slider position was changed
+* onFinish - Called when a slider finished moving (on mouse or touch end)
+
+Those callbacks were from the [plugin](https://github.com/IonDen/ion.rangeSlider) that was the basis for this plugin.
+
+Now, I have a need for knowing when a slider is first selected to move (by either mouse or touch), so I've moved what was the onStart call to a new name, onCreate, and assigned the onStart call to a new point in the code. The now four callback functions are:
+* onCreate - Called when a slider is created
+* onStart - Called when a slider is touched
+* onChange - Called when a slider position has changed
+* onFinish - Called when a slider has finished moving (on mouse or touch end)
+
+*Normally I wouldn't change the name of a callback as it would break the plugin if anyone was calling my code when building their application, but since it doesn't appear that anyone is using the plugin as yet, I felt it would be safe to make the change while using names that are clearer as to the functionality.*
 
 ## Why a new range slider plugin
 There are a number of range slider plugins on GitHub, but they have capabilities I *don't* need for my application (e.g. filler bars that cover the left side of the slider, display of the current value as a tool-tip, and options for dual sliders (hi & low)).

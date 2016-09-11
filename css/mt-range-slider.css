@@ -1,29 +1,14 @@
 /* =======================================================================
  * mt-range-slider.css
- * Version: 1.0
- * Date: 2016/04/29
+ * Version: 1.0.1 - Added touch / no-touch styling
+ * Date: 2016/09/09
  * By: Rich DeBourke
  * License: MIT
  * GitHub: https://github.com/RichDeBourke/mouse-touch-range-slider
  * ======================================================================= */
 
 .rs-hidden-input {
-    position: absolute;
-    display: block;
-    top: 0;
-    left: 0;
-    width: 0;
-    height: 0;
-    font-size: 0;
-    line-height: 0;
-    padding: 0;
-    margin: 0;
-    overflow: hidden;
-    outline: none;
-    z-index: 0;
-    background: none;
-    border-style: solid;
-    border-color: transparent;
+    display: none;
 }
 
 .rs {
@@ -36,8 +21,16 @@
     -ms-user-select: none;
     user-select: none;
     z-index: 1;
-    /* Design related properties */
+}
+
+/* Configurable design related properties
+   If not using touch, the no-touch / touch classes can be removed */
+.no-touch .rs {
     height: 50px;
+}
+
+.touch .rs {
+    height: 54px;
 }
 
 .rs-track {
@@ -47,10 +40,20 @@
     z-index: 2;
     outline: none;
     /* Design related properties */
-    height: 16px;
-    top: 23px;
     border: none;
     border-radius: 16px;
+}
+
+/* Configurable design related properties
+   If not using touch, the no-touch / touch classes can be removed */
+.no-touch .rs-track {
+    height: 16px;
+    top: 23px;
+}
+
+.touch .rs-track {
+    height: 48px;
+    top: 1px;
 }
 
 .rs-slider {
@@ -59,9 +62,6 @@
     cursor: default;
     z-index: 3;
     /* Design related properties */
-    top: 15px;
-    width: 30px;
-    height: 30px;
     border: 1px solid #8a8a8a;
     background: #CCDBE6; /* Old browsers */
     background: -moz-linear-gradient(top, #CCDBE6 0%, #637780 100%); /* FF3.6-15 */
@@ -72,6 +72,20 @@
     box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
     cursor: pointer;
     transition: background 200ms ease;
+}
+
+/* Configurable design related properties
+   If not using touch, the no-touch / touch classes can be removed */
+.no-touch .rs-slider {
+    top: 15px;
+    width: 30px;
+    height: 30px;
+}
+
+.touch .rs-slider {
+    top: 1px;
+    width: 46px;
+    height: 46px;
 }
 
 .slider-dragging {

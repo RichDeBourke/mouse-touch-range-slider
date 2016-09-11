@@ -1,7 +1,7 @@
 /* =======================================================================
  * jquery.mtRangeSlider.js
- * Version: 1.0
- * Date: 2016/04/29
+ * Version: 1.1
+ * Date: 2016/08/25
  * By: Rich DeBourke
  * License: MIT
  * GitHub: https://github.com/RichDeBourke/mouse-touch-range-slider
@@ -63,6 +63,7 @@
             step: 1,
             initialValue: 0,
             keyboard: true,
+            onCreate: null,
             onStart: null,
             onChange: null,
             onFinish: null
@@ -108,7 +109,7 @@
             this.setOrUpdateLayoutPercentages();
 
             // Note - .bind as used below is the JavaScript bind that creates a bound function (it's not the jQuery .bind)
-            this.$cache.track.on("touchstart.rs_" + this.plugin_count + " mousedown.rs_" + this.plugin_count, this.pointerClick.bind(this));
+            this.$cache.track.on("touchstart.rs_" + this.plugin_count + " mousedown.rs_" + this.plugin_count,                  this.pointerClick.bind(this));
             this.$cache.slider.on("touchstart.rs_" + this.plugin_count + " mousedown.rs_" + this.plugin_count, this.pointerDown.bind(this));
             this.$cache.slider.on("focus.rs_" + this.plugin_count, this.focused.bind(this));
             this.$cache.win.on("resize.rs_" + this.plugin_count, this.windowResize.bind(this));
@@ -125,7 +126,7 @@
             this.coords.absolutePixelPointer = this.options.initialValue * this.coords.oneStepPixels;
             this.result.value = this.options.initialValue;
 
-            this.callOnStart();
+            this.callOnCreate();
         },
 
         setOrUpdateLayoutPercentages: function () {
@@ -249,6 +250,8 @@
 
             this.$cache.body.addClass("slider-dragging");
             this.$cache.slider.trigger("focus");
+
+            this.callOnStart();
         },
 
         /**
@@ -337,7 +340,13 @@
         // =============================================================================================================
         // Callbacks
 
-        // The OnStart event is called when a slider is created
+        // The OnCreate event is called when a slider is created
+        callOnCreate: function () {
+            if (this.options.onCreate && typeof this.options.onCreate === "function") {
+                this.options.onCreate(this.result);
+            }
+        },
+        // The OnStar event is called when a
         callOnStart: function () {
             if (this.options.onStart && typeof this.options.onStart === "function") {
                 this.options.onStart(this.result);

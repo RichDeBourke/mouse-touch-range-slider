@@ -40,7 +40,6 @@ input {
     color: #000000;
     text-align: center;
     padding: 2px;
-    height: 26px;
     -webkit-box-sizing: border-box; /* Safari/Chrome, other WebKit */
     -moz-box-sizing: border-box; /* Firefox, other Gecko */
     box-sizing: border-box; /* Opera/IE 8+ */
@@ -59,6 +58,13 @@ input:not([type="radio"]):not([type="checkbox"]) {
 
 .input-6 {
     width: 65px;
+}
+
+.no-touch .input-4, .no-touch .input-6 {
+    height: 26px;
+}
+.touch .input-4, .touch .input-6 {
+    height: 40px;
 }
 
 table {
@@ -83,11 +89,23 @@ td {
 
 .color-result {
     color: #000000;
+    margin-bottom: 6px;
 }
 
-.ctrl {
+.no-touch .ctrl {
     margin: 0 auto 0 auto;
     position: relative;
+}
+
+.touch .ctrl {
+    height: 54px;
+    position: relative;
+}
+
+.touch .rs {
+    float: right;
+    height: 54px;
+    width: 250px;
 }
 
 .slider-label {

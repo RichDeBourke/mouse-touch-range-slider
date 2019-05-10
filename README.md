@@ -228,6 +228,10 @@ Dragging a slider will change the range slider's value. Using the arrow keys (wh
 A listener for resize is attached to the window that will re-evaluate the slider settings if the window is resized.
 
 ## Revisions
+
+#### 2019/05/10
+Verified to work with jQuery 3.4.1.
+
 #### 1.1.1 - 2016/08/30
 #### Added CSS for touch devices
 Added CSS styling for touch devices and updated the two demos to support both touch and non-touch displays. 

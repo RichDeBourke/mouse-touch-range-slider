@@ -210,12 +210,10 @@
         </div>
     </div>
 
-    <!--[if (!IE)|(gt IE 8)]><!-->
-        <script
-            src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
-            integrity="sha256-3edrmyuQ0w65f8gfBsqowzjJe2iM6n0nKciPUp8y+7E="
-            crossorigin="anonymous"></script>
-    <!--<![endif]-->
+    <script
+        src="http://code.jquery.com/jquery-3.4.1.slim.min.js"
+        integrity="sha256-pasqAKBDmFT4eHoN2ndd6lN370kFiGUFyTiUHWhU7k8="
+        crossorigin="anonymous"></script>
 
     <script src="js/jquery.mtRangeSlider.js" type="text/javascript"></script>
     <script>
@@ -231,19 +229,21 @@
             inputValue.value = sliderElement.value;
         }
 
-        $(document).ready(function (sliderDataObject) {
-            $(".slider").mtRangeSlider({
-                min: 0,
-                max: 255,
-                initialValue: 127,
-                onChange: sliderMoved
-            });
+        if (window.jQuery) {
+            $(document).ready(function (sliderDataObject) {
+                $(".slider").mtRangeSlider({
+                    min: 0,
+                    max: 255,
+                    initialValue: 127,
+                    onChange: sliderMoved
+                });
 
-            $("#red-value").val("127").on("focus", function () {this.select();}).change(inputBoxChanged);
-            sliderHandle = $("#slider").data("mtRangeSlider"), // Handle for positioning Slider
-            sliderElement = document.getElementById("slider"), // Handle for getting SliderHandle values
-            inputValue = document.getElementById("red-value"); // Handle for getting & setting the value for the input box
-        });
+                $("#red-value").val("127").on("focus", function () {this.select();}).change(inputBoxChanged);
+                sliderHandle = $("#slider").data("mtRangeSlider"), // Handle for positioning Slider
+                sliderElement = document.getElementById("slider"), // Handle for getting SliderHandle values
+                inputValue = document.getElementById("red-value"); // Handle for getting & setting the value for the input box
+            });
+        }
     </script>
 </body>
 

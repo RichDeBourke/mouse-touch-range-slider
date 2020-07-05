@@ -229,6 +229,9 @@ A listener for resize is attached to the window that will re-evaluate the slider
 
 ## Revisions
 
+#### 2020/07/05
+Verified to work with jQuery 3.5.1.
+
 #### 2019/05/10
 Verified to work with jQuery 3.4.1.
 

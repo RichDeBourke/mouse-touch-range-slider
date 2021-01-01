@@ -11,23 +11,22 @@
 
 (function ($, document) {
     "use strict";
-    var arrayHexDigits = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"],
-        fcVal,
-        fcRVal,
-        fcGVal,
-        fcBVal,
-        fcHValHolder = "0",
-        fcSValHolder = "0",
-        fcVValHolder = "0",
-        frSliderHandle,
-        fgSliderHandle,
-        fbSliderHandle,
-        fhSliderHandle,
-        frSliderElement,
-        fgSliderElement,
-        fbSliderElement,
-        fhSliderElement,
-        $fcolorResult;
+    var hexVal;
+    var cRVal;
+    var cGVal;
+    var cBVal;
+    var cHValHolder = "0";
+    var cSValHolder = "0";
+    var cVValHolder = "0";
+    var rSliderHandle;
+    var gSliderHandle;
+    var bSliderHandle;
+    var hSliderHandle;
+    var rSliderElement;
+    var gSliderElement;
+    var bSliderElement;
+    var hSliderElement;
+    var $colorResult;
 
     function hexValid(strHexValue) {
         var result = false;
@@ -51,165 +50,181 @@
         return result;
     }
 
+    // Polyfill for Number.isNan (from MDN) as IE doesn't support the function
+    Number.isNaN = Number.isNaN || function isNaN(input) {
+        return typeof input === "number" && input !== input;
+    };
+
     function hex(x) {
-        // arrayHexDigits defined at the top
-        return isNaN(x) ? "00" : arrayHexDigits[(x - x % 16) / 16] + arrayHexDigits[x % 16];
+        var arrayHexDigits = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"];
+
+        return (
+            Number.isNaN(x)
+            ? "00"
+            : arrayHexDigits[(x - x % 16) / 16] + arrayHexDigits[x % 16]);
     }
 
     function updateRGBfromHex() {
-        var frontHex;
+        var hexColor = hexVal.value;
 
-        frontHex = fcVal.value;
-        if (fcRVal.value !== parseInt(frontHex.substring(0, 2), 16).toString()) {
-            fcRVal.value = parseInt(frontHex.substring(0, 2), 16);
+        if (cRVal.value !== parseInt(hexColor.substring(0, 2), 16).toString()) {
+            cRVal.value = parseInt(hexColor.substring(0, 2), 16);
         }
-        if (fcGVal.value !== parseInt(frontHex.substring(2, 4), 16).toString()) {
-            fcGVal.value = parseInt(frontHex.substring(2, 4), 16);
+        if (cGVal.value !== parseInt(hexColor.substring(2, 4), 16).toString()) {
+            cGVal.value = parseInt(hexColor.substring(2, 4), 16);
         }
-        if (fcBVal.value !== parseInt(frontHex.substring(4, 6), 16).toString()) {
-            fcBVal.value = parseInt(frontHex.substring(4, 6), 16);
+        if (cBVal.value !== parseInt(hexColor.substring(4, 6), 16).toString()) {
+            cBVal.value = parseInt(hexColor.substring(4, 6), 16);
         }
     }
 
     function updateHexFromRGB() {
-        fcVal.value = hex(fcRVal.value) + hex(fcGVal.value) + hex(fcBVal.value);
+        hexVal.value = hex(cRVal.value) + hex(cGVal.value) + hex(cBVal.value);
     }
 
     function updateHSVfromRGB() {
-        var d, h,
-            fh, fs, fv,
-            minForeRGB, maxForeRGB,
-            fcR,
-            fcG,
-            fcB;
+        var d;
+        var h;
+        var hsvH;
+        var hsvS;
+        var hsvV;
+        var minRGB;
+        var maxRGB;
+        var cR;
+        var cG;
+        var cB;
 
-        fcR = fcRVal.value / 255;
-        fcG = fcGVal.value / 255;
-        fcB = fcBVal.value / 255;
-        minForeRGB = Math.min(fcR, Math.min(fcG, fcB));
-        maxForeRGB = Math.max(fcR, Math.max(fcG, fcB));
-        if (maxForeRGB === minForeRGB) {
-            fh = 0;
-            fs = 0;
-            fv = maxForeRGB;
+        cR = cRVal.value / 255;
+        cG = cGVal.value / 255;
+        cB = cBVal.value / 255;
+        minRGB = Math.min(cR, Math.min(cG, cB));
+        maxRGB = Math.max(cR, Math.max(cG, cB));
+        if (maxRGB === minRGB) {
+            hsvH = 0;
+            hsvS = 0;
+            hsvV = maxRGB;
         } else {
-            d = (fcR === minForeRGB) ? fcG - fcB : ((fcB === minForeRGB) ? fcR - fcG : fcB - fcR);
-            h = (fcR === minForeRGB) ? 3 : ((fcB === minForeRGB) ? 1 : 5);
-            fh = 60 * (h - d / (maxForeRGB - minForeRGB));
-            fs = (maxForeRGB - minForeRGB) / maxForeRGB;
-            fv = maxForeRGB;
+            d = ((cR === minRGB) ? cG - cB : ((cB === minRGB) ? cR - cG : cB - cR));
+            h = ((cR === minRGB) ? 3 : ((cB === minRGB) ? 1 : 5));
+            hsvH = 60 * (h - d / (maxRGB - minRGB));
+            hsvS = (maxRGB - minRGB) / maxRGB;
+            hsvV = maxRGB;
         }
-        if (fcHValHolder !== Math.round(fh).toString()) {
-            fcHValHolder = Math.round(fh).toString();
+        if (cHValHolder !== Math.round(hsvH).toString()) {
+            cHValHolder = Math.round(hsvH).toString();
         }
-        if (fcSValHolder !== Math.round(fs * 100).toString()) {
-            fcSValHolder = Math.round(fs * 100).toString();
+        if (cSValHolder !== Math.round(hsvS * 100).toString()) {
+            cSValHolder = Math.round(hsvS * 100).toString();
         }
-        if (fcVValHolder !== Math.round(fv * 100).toString()) {
-            fcVValHolder = Math.round(fv * 100).toString();
+        if (cVValHolder !== Math.round(hsvV * 100).toString()) {
+            cVValHolder = Math.round(hsvV * 100).toString();
         }
     }
 
     function updateRGBfromHSV() {
-        var tmp, factorial, p, q, t,
-            foreH,
-            foreS,
-            foreV;
+        var tmp;
+        var factorial;
+        var p;
+        var q;
+        var t;
+        var H;
+        var S;
+        var V;
 
-        foreH = parseInt(fcHValHolder, 10);
-        foreS = parseInt(fcSValHolder, 10) / 100;
-        foreV = parseInt(fcVValHolder, 10) / 100;
+        H = parseInt(cHValHolder, 10);
+        S = parseInt(cSValHolder, 10) / 100;
+        V = parseInt(cVValHolder, 10) / 100;
 
-        if (foreS === 0) {
-            tmp = Math.round(foreV * 255);
-            fcRVal.value = tmp.toString();
-            fcGVal.value = tmp.toString();
-            fcBVal.value = tmp.toString();
+        if (S === 0) {
+            tmp = Math.round(V * 255);
+            cRVal.value = tmp.toString();
+            cGVal.value = tmp.toString();
+            cBVal.value = tmp.toString();
         } else {
-            if (foreH === 360) {
-                foreH = 0;
+            if (H === 360) {
+                H = 0;
             }
-            foreH = foreH / 60;
-            tmp = Math.floor(foreH);
-            factorial = foreH - tmp; // factorial part of h
-            p = foreV * (1 - foreS);
-            q = foreV * (1 - foreS * factorial);
-            t = foreV * (1 - foreS * (1 - factorial));
+            H = H / 60;
+            tmp = Math.floor(H);
+            factorial = H - tmp; // factorial part of h
+            p = V * (1 - S);
+            q = V * (1 - S * factorial);
+            t = V * (1 - S * (1 - factorial));
             switch (tmp) {
             case 0:
-                fcRVal.value = Math.round(foreV * 255).toString();
-                fcGVal.value = Math.round(t * 255).toString();
-                fcBVal.value = Math.round(p * 255).toString();
+                cRVal.value = Math.round(V * 255).toString();
+                cGVal.value = Math.round(t * 255).toString();
+                cBVal.value = Math.round(p * 255).toString();
                 break;
             case 1:
-                fcRVal.value = Math.round(q * 255).toString();
-                fcGVal.value = Math.round(foreV * 255).toString();
-                fcBVal.value = Math.round(p * 255).toString();
+                cRVal.value = Math.round(q * 255).toString();
+                cGVal.value = Math.round(V * 255).toString();
+                cBVal.value = Math.round(p * 255).toString();
                 break;
             case 2:
-                fcRVal.value = Math.round(p * 255).toString();
-                fcGVal.value = Math.round(foreV * 255).toString();
-                fcBVal.value = Math.round(t * 255).toString();
+                cRVal.value = Math.round(p * 255).toString();
+                cGVal.value = Math.round(V * 255).toString();
+                cBVal.value = Math.round(t * 255).toString();
                 break;
             case 3:
-                fcRVal.value = Math.round(p * 255).toString();
-                fcGVal.value = Math.round(q * 255).toString();
-                fcBVal.value = Math.round(foreV * 255).toString();
+                cRVal.value = Math.round(p * 255).toString();
+                cGVal.value = Math.round(q * 255).toString();
+                cBVal.value = Math.round(V * 255).toString();
                 break;
             case 4:
-                fcRVal.value = Math.round(t * 255).toString();
-                fcGVal.value = Math.round(p * 255).toString();
-                fcBVal.value = Math.round(foreV * 255).toString();
+                cRVal.value = Math.round(t * 255).toString();
+                cGVal.value = Math.round(p * 255).toString();
+                cBVal.value = Math.round(V * 255).toString();
                 break;
             default: // case 5:
-                fcRVal.value = Math.round(foreV * 255).toString();
-                fcGVal.value = Math.round(p * 255).toString();
-                fcBVal.value = Math.round(q * 255).toString();
+                cRVal.value = Math.round(V * 255).toString();
+                cGVal.value = Math.round(p * 255).toString();
+                cBVal.value = Math.round(q * 255).toString();
             }
         }
     }
-
 
     function updateSliderPositions() {
         // Values in the text boxes are calculated
         // Sliders are updated only if the value has changed
 
-        if (frSliderElement.value !== fcRVal.value) {
-            frSliderHandle.update(fcRVal.value);
+        if (rSliderElement.value !== cRVal.value) {
+            rSliderHandle.update(cRVal.value);
         }
-        if (fgSliderElement.value !== fcGVal.value) {
-            fgSliderHandle.update(fcGVal.value);
+        if (gSliderElement.value !== cGVal.value) {
+            gSliderHandle.update(cGVal.value);
         }
-        if (fbSliderElement.value !== fcBVal.value) {
-            fbSliderHandle.update(fcBVal.value);
+        if (bSliderElement.value !== cBVal.value) {
+            bSliderHandle.update(cBVal.value);
         }
-        if (fhSliderElement.value !== fcHValHolder) {
-            fhSliderHandle.update(fcHValHolder);
+        if (hSliderElement.value !== cHValHolder) {
+            hSliderHandle.update(cHValHolder);
         }
 
     }
 
     function updateRGBfromSliders(sliderId) {
         switch (sliderId) {
-        case frSliderElement.id:
-            fcRVal.value = frSliderElement.value;
+        case rSliderElement.id:
+            cRVal.value = rSliderElement.value;
             break;
-        case fgSliderElement.id:
-            fcGVal.value = fgSliderElement.value;
+        case gSliderElement.id:
+            cGVal.value = gSliderElement.value;
             break;
         default:
-            fcBVal.value = fbSliderElement.value;
+            cBVal.value = bSliderElement.value;
         }
     }
 
     function updateHSVfromSliders() {
-        if (fcHValHolder !== fhSliderElement.value) {
-            fcHValHolder = fhSliderElement.value;
+        if (cHValHolder !== hSliderElement.value) {
+            cHValHolder = hSliderElement.value;
         }
     }
 
     function getLuminance(rgb) {
-        var i, lum;
+        var i;
+        var lum;
 
         for (i = 0; i < rgb.length; i++) {
             if (rgb[i] <= 0.03928) {
@@ -223,21 +238,20 @@
     }
 
     function updateColorsDisplay() {
-        var fcRi = parseInt(fcRVal.value, 10),
-            fcGi = parseInt(fcGVal.value, 10),
-            fcBi = parseInt(fcBVal.value, 10),
-            lumForInitial;
+        var cRi = parseInt(cRVal.value, 10);
+        var cGi = parseInt(cGVal.value, 10);
+        var cBi = parseInt(cBVal.value, 10);
+        var lumForInitial;
 
-        $fcolorResult.css("background-color", "#" + fcVal.value);
+        $colorResult.css("background-color", "#" + hexVal.value);
 
-        lumForInitial = getLuminance([fcRi / 255, fcGi / 255, fcBi / 255]);
+        lumForInitial = getLuminance([cRi / 255, cGi / 255, cBi / 255]);
 
-        if ((lumForInitial > 0.215) && ($fcolorResult.css("color") === "rgb(255, 255, 255)")) {
-            $fcolorResult.css("color", "#000000");
-        } else if ((lumForInitial <= 0.215) && ($fcolorResult.css("color") === "rgb(0, 0, 0)")) {
-            $fcolorResult.css("color", "#FFFFFF");
+        if ((lumForInitial > 0.215) && ($colorResult.css("color") === "rgb(255, 255, 255)")) {
+            $colorResult.css("color", "#000000");
+        } else if ((lumForInitial <= 0.215) && ($colorResult.css("color") === "rgb(0, 0, 0)")) {
+            $colorResult.css("color", "#FFFFFF");
         }
-
     }
 
     function hexInputBoxChanged(event) {
@@ -301,31 +315,30 @@
             onChange: hsvSliderMoved
         });
         // Handles for positioning Sliders
-        frSliderHandle = $("#fc-red").data("mtRangeSlider");
-        fgSliderHandle = $("#fc-green").data("mtRangeSlider");
-        fbSliderHandle = $("#fc-blue").data("mtRangeSlider");
-        fhSliderHandle = $("#fc-hue").data("mtRangeSlider");
+        rSliderHandle = $("#c-red").data("mtRangeSlider");
+        gSliderHandle = $("#c-green").data("mtRangeSlider");
+        bSliderHandle = $("#c-blue").data("mtRangeSlider");
+        hSliderHandle = $("#c-hue").data("mtRangeSlider");
         // Handles for getting SliderHandle values
-        frSliderElement = document.getElementById("fc-red");
-        fgSliderElement = document.getElementById("fc-green");
-        fbSliderElement = document.getElementById("fc-blue");
-        fhSliderElement = document.getElementById("fc-hue");
+        rSliderElement = document.getElementById("c-red");
+        gSliderElement = document.getElementById("c-green");
+        bSliderElement = document.getElementById("c-blue");
+        hSliderElement = document.getElementById("c-hue");
         // Set the initial values to the input boxes and bind the change handlers
-        $("#fc").val("0024A7").on("focus", function () {this.select();}).change(hexInputBoxChanged);
-        $("#fc-r").val("0").on("focus", function () {this.select();}).change(rgbInputBoxChanged);
-        $("#fc-g").val("36").on("focus", function () {this.select();}).change(rgbInputBoxChanged);
-        $("#fc-b").val("167").on("focus", function () {this.select();}).change(rgbInputBoxChanged);
-        fcHValHolder = "227";
-        fcSValHolder = "100";
-        fcVValHolder = "65";
+        $("#hex-c").val("0024A7").on("focus", function () {this.select();}).change(hexInputBoxChanged);
+        $("#c-r").val("0").on("focus", function () {this.select();}).change(rgbInputBoxChanged);
+        $("#c-g").val("36").on("focus", function () {this.select();}).change(rgbInputBoxChanged);
+        $("#c-b").val("167").on("focus", function () {this.select();}).change(rgbInputBoxChanged);
+        cHValHolder = "227";
+        cSValHolder = "100";
+        cVValHolder = "65";
         // Handles for getting & setting the values for the color the input boxes
-        fcVal = document.getElementById("fc");
-        fcRVal = document.getElementById("fc-r");
-        fcGVal = document.getElementById("fc-g");
-        fcBVal = document.getElementById("fc-b");
+        hexVal = document.getElementById("hex-c");
+        cRVal = document.getElementById("c-r");
+        cGVal = document.getElementById("c-g");
+        cBVal = document.getElementById("c-b");
         // jQuery handles for setting the background and text colors for the two color table divs
-        $fcolorResult = $("#color-result");
-        // Get the stored color data for the color samples
+        $colorResult = $("#color-result");
         updateColorsDisplay();
         updateSliderPositions();
 

@@ -1,63 +1,47 @@
 /* =======================================================================
  * jquery.mtRangeSlider.js
- * Version: 1.1
- * Date: 2016/08/25
+ * Version: 1.2
+ * Date: 2021/01/01
  * By: Rich DeBourke
  * License: MIT
  * GitHub: https://github.com/RichDeBourke/mouse-touch-range-slider
  * ======================================================================= */
 
-(function ($, document, window) {
+(function ($, win, doc) {
     "use strict";
 
-    var plugin_count = 0,
-        MouseTouchRangeSlider;
+    var mouseTouchRangeSlider = function (element, options) {
+        var config = [];
+        var result = [];
 
-    /**
-     * Main plugin constructor
-     *
-     * @param input {Object} link to the input element
-     * @param options {Object} slider config
-     * @param plugin_count {Number}
-     * @constructor
-     */
-    MouseTouchRangeSlider = function (input, options, plugin_count) {
-        var config;
+        var sourceInput = element; // reference to the source element
+        var $sourceInput = $(element); // reference to the jQuery version of the source
+        var $rsContainer = null;
+        var $track = null;
+        var $slider = null;
 
-        this.VERSION = "1.0";
-        this.source_input = input;
-        this.tabindex = $(input).prop("tabindex");
-        this.plugin_count = plugin_count;
-        this.current_plugin = 0;
-        this.is_dragging = false;
-        this.is_active = false;
+        var plugin = this;
 
-        // cache of jQuery objects for accessing DOM elements
-        this.$cache = {
-            win: $(window),
-            body: $(document.body),
-            source_input: $(input),
-            rs_container: null,
-            track: null,
-            slider: null
-        };
+        if ($sourceInput.prop("tabindex")) {
+            config.tabIndex = $sourceInput.prop("tabindex");
+        } else {
+            config.tabIndex = 0;
+        }
 
-        // storage for measurement variables
-        this.coords = {
-            containerWidth: 0, // Width of the span with the unique plugin ID
-            sliderWidth: 0, // Width of the handle
-            containerLeftOffset: 0, // Distance from the left side of the window to the container (for mouse positioning)
-            containerTravelPixels: 0, // # of pixels for traveling
-            containerTravelPercentage: 0, // % of the container for traveling
-            fullRange: 0, // How many steps
-            oneStepPixels: 0, // How many pixels represent one step (usually a fraction of a pixel)
-            oneStepPercentage: 0, // % of the container travel distance representing one step
-            absolutePixelPointer: 0, // Pixel distance to the left side of slider for the current value
-            fuzzyPixelPointer: 0 // Distance from left side to where the mouse was first clicked on the slider
-        };
+        // measurement variables
+        config.containerWidth = 0; // Width of the span with the unique plugin ID
+        config.sliderWidth = 0; // Width of the handle
+        config.containerLeftOffset = 0; // Distance from the left side of the window to the container (for mouse positioning)
+        config.containerTravelPixels = 0; // # of pixels for traveling
+        config.containerTravelPercentage = 0; // % of the container for traveling
+        config.fullRange = 0; // How many steps
+        config.oneStepPixels = 0; // How many pixels represent one step (usually a fraction of a pixel)
+        config.oneStepPercentage = 0; // % of the container travel distance representing one step
+        config.absolutePixelPointer = 0; // Pixel distance to the left side of slider for the current value
+        config.fuzzyPixelPointer = 0; // Distance from left side to where the mouse was first clicked on the slider
 
         // default config
-        config = {
+        config.options = {
             min: 0,
             max: 100,
             step: 1,
@@ -69,328 +53,279 @@
             onFinish: null
         };
 
-        // extends default config
-        $.extend(config, options);
-
-        // data config extends config
-        this.options = config;
-
-        // default result object, returned to callbacks
-        this.result = {
-            input: this.$cache.source_input,
-            id: this.$cache.source_input.attr("id"),
-            min: this.options.min,
-            max: this.options.max,
-            value: this.options.initialValue // value will be updated as the slider is moved
+        result = {
+            input: sourceInput,
+            id: sourceInput.getAttribute("id"),
+            min: config.options.min,
+            max: config.options.max,
+            value: config.options.initialValue // value will be updated as the slider is moved
         };
 
-        this.init();
-    };
 
-    MouseTouchRangeSlider.prototype = {
-        /**
-         * Start the plugin instance
-         */
-        init: function () {
-            var container_html = '<span class="rs rs-' + this.plugin_count + '"></span>',
-                rangeSlider_html = '<span class="rs-track" tabindex="-1"></span>' + // FYI - having the tabindex made the span focusable
-                    '<span class="rs-slider single" tabindex="' + this.tabindex + '"></span>';
+        $.extend(config.options, options);
 
-            this.$cache.source_input.prop("value", 0); // initialize the value so the startup is consistent
-            this.$cache.source_input.before(container_html);
-            this.$cache.rs_container = this.$cache.source_input.prev();
-            this.$cache.rs_container.html(rangeSlider_html);
-            this.$cache.track = this.$cache.rs_container.find(".rs-track");
-            this.$cache.slider = this.$cache.rs_container.find(".rs-slider");
+        // methods
 
-            this.$cache.source_input.prop("readonly", true);
-            this.$cache.source_input.addClass("rs-hidden-input").attr('tabindex', '-1');
+        function setOrUpdateLayoutPercentages () {
+            config.containerWidth = $rsContainer.outerWidth(false);
+            config.sliderWidth = $slider.outerWidth(false);
+            config.containerLeftOffset = $rsContainer.offset().left;
+            config.containerTravelPixels = config.containerWidth - config.sliderWidth;
+            config.containerTravelPercentage = (config.containerWidth - config.sliderWidth) / config.containerWidth * 100;
+            config.fullRange = options.max - options.min;
+            config.oneStepPixels = config.containerTravelPixels / config.fullRange;
+            config.oneStepPercentage = config.containerTravelPercentage / config.fullRange;
+            config.absolutePixelPointer = parseInt($sourceInput.prop("value"), 10) * config.oneStepPixels;
+        }
 
-            this.setOrUpdateLayoutPercentages();
-
-            // Note - .bind as used below is the JavaScript bind that creates a bound function (it's not the jQuery .bind)
-            this.$cache.track.on("touchstart.rs_" + this.plugin_count + " mousedown.rs_" + this.plugin_count,                  this.pointerClick.bind(this));
-            this.$cache.slider.on("touchstart.rs_" + this.plugin_count + " mousedown.rs_" + this.plugin_count, this.pointerDown.bind(this));
-            this.$cache.slider.on("focus.rs_" + this.plugin_count, this.focused.bind(this));
-            this.$cache.win.on("resize.rs_" + this.plugin_count, this.windowResize.bind(this));
-
-            if (this.options.keyboard) {
-                this.$cache.track.on("keydown.rs_" + this.plugin_count, this.keyBoard.bind(this));
-                this.$cache.slider.on("keydown.rs_" + this.plugin_count, this.keyBoard.bind(this));
+        // Callbacks
+        // The OnCreate event is called when a slider is created
+        function callOnCreate () {
+            if (config.options.onCreate && typeof config.options.onCreate === "function") {
+                config.options.onCreate(result);
             }
+        }
 
-            // Set the requested initial position
-            this.$cache.source_input.prop("value", this.options.initialValue);
-            this.$cache.slider[0].style.left = this.options.initialValue * this.coords.oneStepPercentage + "%";
+        // The OnStart event is called when a slider thumb has been selected
+        function callOnStart () {
+            if (config.options.onStart && typeof config.options.onStart === "function") {
+                config.options.onStart(result);
+            }
+        }
 
-            this.coords.absolutePixelPointer = this.options.initialValue * this.coords.oneStepPixels;
-            this.result.value = this.options.initialValue;
+        // The OnChange event is called when there is a pointerMove, a pointerUp, or a shiftOneStep event
+        // If the value or position is changed programatically, there is no OnChange event
+        function callOnChange () {
+            if (config.options.onChange && typeof config.options.onChange === "function") {
+                config.options.onChange(result);
+            }
+        }
 
-            this.callOnCreate();
-        },
+        // pointerUp
+        function callOnFinish () {
+            if (config.options.onFinish && typeof config.options.onFinish === "function") {
+                config.options.onFinish(result);
+            }
+        }
 
-        setOrUpdateLayoutPercentages: function () {
-            this.coords.containerWidth = this.$cache.rs_container.outerWidth(false);
-            this.coords.sliderWidth = this.$cache.slider.outerWidth(false);
-            this.coords.containerLeftOffset = this.$cache.rs_container.offset().left;
-            this.coords.containerTravelPixels = this.coords.containerWidth - this.coords.sliderWidth;
-            this.coords.containerTravelPercentage = (this.coords.containerWidth - this.coords.sliderWidth) / this.coords.containerWidth * 100;
-            this.coords.fullRange = this.options.max - this.options.min;
-            this.coords.oneStepPixels = this.coords.containerTravelPixels / this.coords.fullRange;
-            this.coords.oneStepPercentage = this.coords.containerTravelPercentage / this.coords.fullRange;
-            this.coords.absolutePixelPointer = parseInt(this.$cache.source_input.prop("value"), 10) * this.coords.oneStepPixels;
-        },
+        function shiftOneStep (direction) {
+            var currentValue = parseInt($sourceInput.prop("value"), 10);
+            if (direction) {
+                if (currentValue < config.options.max) {
+                    currentValue += 1;
+                }
+            } else {
+                if (currentValue > config.options.min) {
+                    currentValue -= 1;
+                }
+            }
+            $sourceInput.prop("value", currentValue);
+            $slider[0].style.left = currentValue * config.oneStepPercentage + "%";
+            config.absolutePixelPointer = currentValue * config.oneStepPixels;
+            result.value = currentValue;
+            callOnChange();
+        }
 
-        /**
-         * Mousemove or touchmove
-         * @param e {Object} event object
-         */
-        pointerMove: function (e) {
-            var x,
-                currentDragDistance,
-                currentPosition,
-                currentValue,
-                sliderPosition;
+        function pointerMove (event) {
+            var x;
+            var currentDragDistance;
+            var currentPosition;
+            var currentValue;
+            var sliderPosition;
 
-            if (!this.is_dragging) {
+            /*if (!this.is_dragging) {
                 window.alert("is_dragging - pointerMove");
                 return;
-            }
+            }*/
 
-            x = e.pageX || (e.originalEvent.touches && e.originalEvent.touches[0].pageX);
+            x = event.pageX || (event.touches && event.touches[0].pageX);
             if (x === undefined) {
                 return;
             }
-            currentDragDistance = x - this.coords.containerLeftOffset - this.coords.fuzzyPixelPointer;
-            currentPosition = currentDragDistance + this.coords.absolutePixelPointer;
-            currentValue = Math.round(currentPosition / this.coords.oneStepPixels);
+            currentDragDistance = x - config.containerLeftOffset - config.fuzzyPixelPointer;
+            currentPosition = currentDragDistance + config.absolutePixelPointer;
+            currentValue = Math.round(currentPosition / config.oneStepPixels);
 
-            if (currentValue < this.options.min) {
-                currentValue = this.options.min;
-            } else if (currentValue > this.options.max) {
-                currentValue = this.options.max;
+            if (currentValue < config.options.min) {
+                currentValue = config.options.min;
+            } else if (currentValue > config.options.max) {
+                currentValue = config.options.max;
             }
 
-            sliderPosition = currentValue * this.coords.oneStepPercentage + "%";
+            sliderPosition = currentValue * config.oneStepPercentage + "%";
 
-            this.$cache.source_input.prop("value", currentValue);
-            this.$cache.slider[0].style.left = sliderPosition;
+            $sourceInput.prop("value", currentValue);
+            $slider[0].style.left = sliderPosition;
 
-            this.result.value = currentValue;
+            result.value = currentValue;
 
-            this.callOnChange();
-        },
+            event.preventDefault();
+            callOnChange();
+        }
 
-        /**
-         * Mouseup or touchend
-         * @param e {Object} event object
-         */
-        pointerUp: function (e) {
-            e.preventDefault();
+        function pointerUp (event) {
+            config.absolutePixelPointer = parseInt($sourceInput.prop("value")) * config.oneStepPixels;
+            result.value = parseInt($sourceInput.prop("value"));
 
-            if (this.current_plugin !== this.plugin_count) {
-                window.alert("wrong plugin error - pointerUp");
-                return;
-            }
+            doc.body.removeEventListener("pointermove", pointerMove, {passive: false});
+            doc.body.removeEventListener("pointerup", pointerUp, {passive: false});
+            doc.body.removeEventListener("mousemove", pointerMove, {passive: false});
+            doc.body.removeEventListener("mouseup", pointerUp, {passive: false});
 
-            if (this.is_active) {
-                this.is_active = false;
-            } else {
-                //window.alert("is_active error - pointerUp");
-                return;
-            }
+            $slider.trigger("focus");
 
-            if (!this.is_dragging) {
-                window.alert("is_dragging error - pointerUp");
-                return;
-            }
+            event.preventDefault();
+            callOnChange();
+            callOnFinish();
+        }
 
-            this.coords.absolutePixelPointer = parseInt(this.$cache.source_input.prop("value")) * this.coords.oneStepPixels;
-            this.result.value = parseInt(this.$cache.source_input.prop("value"));
-
-            this.callOnChange();
-
-            this.$cache.body.off("touchmove.rs_" + this.plugin_count + " mousemove.rs_" + this.plugin_count);
-
-            this.$cache.body.off("touchend.rs_" + this.plugin_count + " mouseup.rs_" + this.plugin_count);
-
-            this.$cache.body.removeClass("slider-dragging");
-
-            this.is_dragging = false;
-            this.$cache.slider.trigger("focus");
-
-            // callbacks call
-            this.callOnFinish();
-        },
-
-        /**
-         * Mousedown or touchstart
-         * @param e {Object} event object
-         */
-        pointerDown: function (e) {
+        function pointerDown (event) {
             var x;
 
-            if (e.button === 1 || e.button === 2) { // Only drag if the left button was clicked (on a right handed mouse)
+            if (event.button === 1 || event.button === 2) { // Only drag if the left button was clicked (on a right handed mouse)
                 return;
             }
-            e.preventDefault();
 
-            this.$cache.body.on("touchmove.rs_" + this.plugin_count + " mousemove.rs_" + this.plugin_count, this.pointerMove.bind(this));
+            if (win.PointerEvent) {
+                // Use pointer events
+                doc.body.addEventListener("pointermove", pointerMove, {passive: false});
+                doc.body.addEventListener("pointerup", pointerUp, {passive: false});
+            } else {
+                // It's IE9 or 10 - use the mouse
+                doc.body.addEventListener("mousemove", pointerMove, {passive: false});
+                doc.body.addEventListener("mouseup", pointerUp, {passive: false});
+            }
 
-            this.$cache.body.on("touchend.rs_" + this.plugin_count + " mouseup.rs_" + this.plugin_count, this.pointerUp.bind(this));
+            x = event.pageX || (event.touches && event.touches[0].pageX);
 
-            x = e.pageX || (e.originalEvent.touches && e.originalEvent.touches[0].pageX);
 
-            this.current_plugin = this.plugin_count;
+            config.fuzzyPixelPointer = x - config.containerLeftOffset;
 
-            this.is_active = true;
-            this.is_dragging = true;
+            event.preventDefault();
+            callOnStart();
+        }
 
-            this.coords.fuzzyPixelPointer = x - this.coords.containerLeftOffset;
+        function pointerClick (event) {
+            var x;
+            var clickPosition;
 
-            this.$cache.body.addClass("slider-dragging");
-            this.$cache.slider.trigger("focus");
-
-            this.callOnStart();
-        },
-
-        /**
-         * Mousedown or touchstart for track
-         * @param e {Object} event object
-         */
-        pointerClick: function (e) {
-            var x,
-                clickPosition;
-
-            if (e.button === 1 || e.button === 2) {
+            if (event.button === 1 || event.button === 2) {
                 return;
             }
-            e.preventDefault();
-            x = e.pageX || (e.originalEvent.touches && e.originalEvent.touches[0].pageX);
+            event.preventDefault();
+            x = event.pageX || (event.touches && event.touches[0].pageX);
 
             // if the track is clicked, figure out if the click is towards the left or right
             // of the slider, and then move one position in that direction
 
-            this.current_plugin = this.plugin_count;
-            clickPosition = x - this.coords.containerLeftOffset;
+            //this.current_plugin = this.plugin_count;
+            clickPosition = x - config.containerLeftOffset;
 
-            if (clickPosition < this.coords.absolutePixelPointer) { // shift left 1 step
-                this.shiftOneStep(false);
+            if (clickPosition < config.absolutePixelPointer) { // shift left 1 step
+                shiftOneStep(false);
             } else { // shift right 1 position
-                this.shiftOneStep(true);
+                shiftOneStep(true);
             }
 
-            this.$cache.slider.trigger("focus");
-        },
+            $slider.trigger("focus");
+        }
 
-        /**
-         * Keyboard controls for focused slider
-         * @param e {Object} event object
-         */
-        keyBoard: function (e) {
-            if (this.current_plugin !== this.plugin_count || e.altKey || e.ctrlKey || e.shiftKey || e.metaKey) {
+        function keyBoard (event) {
+            if (event.altKey || event.ctrlKey || event.shiftKey || event.metaKey) {
                 return;
             }
-            switch (e.which) {
+            switch (event.which) {
                 case 40: // DOWN
                 case 37: // LEFT
-                    e.preventDefault();
-                    this.shiftOneStep(false);
+                    event.preventDefault();
+                    shiftOneStep(false);
                     break;
 
                 case 38: // UP
                 case 39: // RIGHT
-                    e.preventDefault();
-                    this.shiftOneStep(true);
+                    event.preventDefault();
+                    shiftOneStep(true);
                     break;
             }
-        },
+        }
 
-        /**
-         * Move the slider (and value) by one step from a click on the track or arrow key
-         * @param direction {boolean} false for left / true for right
-         */
-        shiftOneStep: function (right) {
-            var currentValue = parseInt(this.$cache.source_input.prop("value"), 10);
-            if (right) {
-                if (currentValue < this.options.max) {
-                    currentValue += 1;
-                }
-            } else {
-                if (currentValue > this.options.min) {
-                    currentValue -= 1;
-                }
-            }
-            this.$cache.source_input.prop("value", currentValue);
-            this.$cache.slider[0].style.left = currentValue * this.coords.oneStepPercentage + "%";
-            this.coords.absolutePixelPointer = currentValue * this.coords.oneStepPixels;
-            this.result.value = currentValue;
-            this.callOnChange();
-        },
+        function windowResize () {
+            setOrUpdateLayoutPercentages();
+        }
 
-        focused: function () {
-            this.current_plugin = this.plugin_count;
-        },
-
-        windowResize: function () {
-            this.setOrUpdateLayoutPercentages();
-        },
-
-
-        // =============================================================================================================
-        // Callbacks
-
-        // The OnCreate event is called when a slider is created
-        callOnCreate: function () {
-            if (this.options.onCreate && typeof this.options.onCreate === "function") {
-                this.options.onCreate(this.result);
-            }
-        },
-        // The OnStar event is called when a
-        callOnStart: function () {
-            if (this.options.onStart && typeof this.options.onStart === "function") {
-                this.options.onStart(this.result);
-            }
-        },
-        // The OnChange event is called when there is a pointerMove, a pointerUp, or a shiftOneStep event
-        // If the value or position is changed programatically, there is no OnChange event
-        callOnChange: function () {
-            if (this.options.onChange && typeof this.options.onChange === "function") {
-                this.options.onChange(this.result);
-            }
-        },
-        // pointerUp
-        callOnFinish: function () {
-            if (this.options.onFinish && typeof this.options.onFinish === "function") {
-                this.options.onFinish(this.result);
-            }
-        },
-
-
-        // =============================================================================================================
-        // Public methods
-
-        update: function (value) {
-            if (!this.source_input) {
+        plugin.update = function (value) {
+            if (!sourceInput) {
                 return;
             }
             if (typeof value === "string") {
                 value = parseInt(value, 10);
             }
             // Set the requested position
-            this.$cache.source_input.prop("value", value);
-            this.$cache.slider[0].style.left = value * this.coords.oneStepPercentage + "%";
+            $sourceInput.prop("value", value);
+            $slider[0].style.left = value * config.oneStepPercentage + "%";
 
-            this.coords.absolutePixelPointer = value * this.coords.oneStepPixels;
-        }
+            config.absolutePixelPointer = value * config.oneStepPixels;
+        };
+
+
+        // the "constructor" method that gets called when the object is created
+        plugin.init = function () {
+            var container_html = '<span class="rs"></span>';
+            // FYI - having the tabindex made the span focusable
+            var rangeSlider_html = '<span class="rs-track" tabindex="-1"></span>' +
+                '<span class="rs-slider single" tabindex="' + config.tabIndex + '"></span>';
+
+            $sourceInput.prop("value", 0); // initialize the value so the startup is consistent
+            $sourceInput.before(container_html);
+            $rsContainer = $sourceInput.prev();
+            $rsContainer.html(rangeSlider_html);
+            $track = $rsContainer.find(".rs-track");
+            $slider = $rsContainer.find(".rs-slider");
+
+            $sourceInput.prop("readonly", true);
+            $sourceInput.addClass("rs-hidden-input").attr('tabindex', '-1');
+
+            setOrUpdateLayoutPercentages();
+
+            if (win.PointerEvent) {
+                // Use pointer events
+                $track[0].addEventListener("pointerdown", pointerClick, { passive: false });
+                $slider[0].addEventListener("pointerdown", pointerDown, {passive: false});
+            } else {
+                // It's IE9 or 10 - use the mouse
+                $track[0].addEventListener("mousedown", pointerClick, { passive: false });
+                $slider[0].addEventListener("mousedown", pointerDown, {passive: false});
+            }
+
+            win.addEventListener("resize", windowResize, {passive: true});
+
+            if (config.options.keyboard) {
+                $track[0].addEventListener("keydown", keyBoard, {passive: false});
+                $slider[0].addEventListener("keydown", keyBoard, {passive: false});
+            }
+
+            // Set the requested initial position
+            $sourceInput.prop("value", config.options.initialValue);
+            $slider[0].style.left = config.options.initialValue * config.oneStepPercentage + "%";
+
+            config.absolutePixelPointer = config.options.initialValue * config.oneStepPixels;
+            result.value = config.options.initialValue;
+
+            callOnCreate();
+        };
+
+        // call the "constructor" method
+        plugin.init();
+
     };
 
+    // add the plugin to the jQuery.fn object
     $.fn.mtRangeSlider = function (options) {
         return this.each(function () {
-            if (!$.data(this, "mtRangeSlider")) {
-                $.data(this, "mtRangeSlider", new MouseTouchRangeSlider(this, options, plugin_count++));
+            if ($.data(this, "mtRangeSlider") === undefined) {
+                $.data(this, "mtRangeSlider", new mouseTouchRangeSlider(this, options));
             }
         });
     };
 
-} (jQuery, document, window));
+}(jQuery, window, document));

@@ -11,9 +11,9 @@
     <meta name="description" content="Simple demo for MT-RangeSlider">
 
     <script>
-        (function (window, document, navigator) {
-            if (('ontouchstart' in window) || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0)) {
-                document.documentElement.className = document.documentElement.className.replace(/\bno-touch\b/, 'touch');
+        (function (win, doc, nav) {
+            if (('ontouchstart' in win) || (nav.maxTouchPoints && nav.maxTouchPoints > 0)) {
+                doc.documentElement.className = doc.documentElement.className.replace(/\bno-touch\b/, 'touch');
             }
         }(window, document, navigator));
     </script>
@@ -188,35 +188,74 @@
             background: -webkit-linear-gradient(45deg, #C7EEFF 0%,#FFFFFF 100%); /* Chrome10-25,Safari5.1-6 */
             background: linear-gradient(45deg, #C7EEFF 0%,#FFFFFF 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
         }
+
+        .ie_warning {
+            position: static;
+            width: 100%;
+            top: 0;
+            left: 0;
+            z-index: 99;
+            background-color: #fdf2ab;
+            border-bottom: 1px solid #A29330;
+            border-top-width: 0;
+        }
+
+        .ie_warning div {
+            width: 960px;
+            line-height: 16px;
+            font-size: medium;
+            margin: 0 auto 0 auto;
+            padding: 6px 0 6px 0;
+            text-align: center;
+        }
+
+        .ie_warning img {
+            padding-right: 6px;
+            vertical-align: top;
+        }
     </style>
 
 </head>
 
 <body>
+    <!-- This page only supports IE9 and higher (which are the versions supported by jQuery 2) -->
+    <!--[if lte IE 8]>
+        <div class="ie_warning">
+            <div>
+                <img src="images/dialog-warning.gif" width="16" height="16" alt=""/>
+                My apologies. The Range Slider plugin is not compatible with older versions of Internet Explorer.
+            </div>
+        </div>
+    <![endif]-->
     <div class="container">
         <h1>Simple Range Slider</h1>
         <p>
             Demo of the range slider plugin&rsquo;s general operation.
         </p>
         <p>
+            Entering a value between 0 and 255 into the text box will move the slider.
+        </p>
+        <p>
+            Moving the slider, clicking on the track, or using the arrow keys will change the value in the text box.
+        </p>
+        <p>
             The demo includes the minimum JavaScript code to operate the slider. There is no checking such as verifying the input value is valid.
         </p>
     </div>
     <div class="container">
-        <label for="red-value">RGB:</label>
+        <label for="red-value">Slider Value:</label>
         <input id="red-value" maxlength="3" size="3" type="text" tabindex="1" />
         <div class="ctrl red">
-            <input type="text" id="slider" class="slider" value="" name="slider" tabindex="2" />
+            <input type="text" id="red-slider" class="slider" value="" name="slider" tabindex="2" />
         </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.slim.min.js" integrity="sha512-/DXTXr6nQodMUiq+IUJYCt2PPOUjrHJ9wFrqpJ3XkgPNOZVfMok7cRw6CSxyCQxXn6ozlESsSh1/sMCTF1rL/g==" crossorigin="anonymous"></script>
-
-    <script src="js/jquery.mtRangeSlider.js" type="text/javascript"></script>
+    <script src="js/jquery.mtRangeSlider.js"></script>
     <script>
-        var frSliderHandle, // Handle for positioning Slider
-            frSliderElement, // Handle for getting SliderHandle values
-            fcVal; // Handle for getting & setting the value for the input boxes
+        var sliderHandle; // Handle for positioning Slider
+        var sliderElement; // Handle for getting SliderHandle values
+        var inputValue; // Handle for getting & setting the value for the input boxes
 
         function inputBoxChanged() {
             sliderHandle.update(inputValue.value);
@@ -226,21 +265,20 @@
             inputValue.value = sliderElement.value;
         }
 
-        if (window.jQuery) {
-            $(document).ready(function (sliderDataObject) {
-                $(".slider").mtRangeSlider({
-                    min: 0,
-                    max: 255,
-                    initialValue: 127,
-                    onChange: sliderMoved
-                });
-
-                $("#red-value").val("127").on("focus", function () {this.select();}).change(inputBoxChanged);
-                sliderHandle = $("#slider").data("mtRangeSlider"), // Handle for positioning Slider
-                sliderElement = document.getElementById("slider"), // Handle for getting SliderHandle values
-                inputValue = document.getElementById("red-value"); // Handle for getting & setting the value for the input box
+        $(document).ready(function (sliderDataObject) {
+            $(".slider").mtRangeSlider({
+                min: 0,
+                max: 255,
+                initialValue: 127,
+                onChange: sliderMoved
             });
-        }
+
+            $("#red-value").val("127").on("focus", function () {this.select();}).change(inputBoxChanged);
+
+            sliderHandle = $("#red-slider").data("mtRangeSlider"); // Handle for positioning Slider
+            sliderElement = document.getElementById("red-slider"); // Handle for getting SliderHandle values
+            inputValue = document.getElementById("red-value"); // Handle for getting & setting the value for the input box
+        });
     </script>
 </body>
 
